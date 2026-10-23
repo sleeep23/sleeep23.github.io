@@ -1,4 +1,410 @@
----
-layout: home
-# Index page
----
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dongho Seo</title>
+<meta name="description" content="Dongho Seo — undergraduate researcher at GIST SYMPLE Lab working on efficient LLM inference.">
+<meta property="og:title" content="Dongho Seo">
+<meta property="og:description" content="Undergraduate researcher at GIST SYMPLE Lab working on KV cache optimization for long-context LLM inference.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://dongho-seo.me/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=STIX+Two+Text:ital@1&display=swap">
+<style>
+/* Layout: one 760px reading column; header = text + photo; entries = content left, mono metadata right. */
+:root {
+  --bg: #ffffff;
+  --fg: #16181d;
+  --muted: #5d6370;
+  --rule: #e3e5ea;
+  --link: #1d4ed8;
+  --cell-line: #16181d;
+  --lv0: #f1f3f6; --lv1: #c5ccd8; --lv2: #8592a8; --lv3: #3d4a63;
+  --q: #2b5fd9;
+  --hot: #ff4a1c;            /* vermilion: highlight frames inside figures only */
+  --pruned: #fafbfc;
+  --font-sans: "IBM Plex Sans", -apple-system, "Segoe UI", "Apple SD Gothic Neo", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --font-math: "STIX Two Text", "Times New Roman", serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111317; --fg: #e8eaee; --muted: #9aa1ad; --rule: #2a2e36; --link: #7fa6ff;
+    --cell-line: #c9ced8;
+    --lv0: #1c2027; --lv1: #3a4352; --lv2: #6e7d96; --lv3: #b9c4d8;
+    --q: #6f9bff; --hot: #ff6a42; --pruned: #15181d;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111317; --fg: #e8eaee; --muted: #9aa1ad; --rule: #2a2e36; --link: #7fa6ff;
+  --cell-line: #c9ced8;
+  --lv0: #1c2027; --lv1: #3a4352; --lv2: #6e7d96; --lv3: #b9c4d8;
+  --q: #6f9bff; --hot: #ff6a42; --pruned: #15181d;
+  color-scheme: dark;
+}
+
+html { color-scheme: light dark; }
+body {
+  margin: 0;
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-sans); font-size: 15.5px; line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap {
+  max-width: 760px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 56px 64px;
+  display: flex; flex-direction: column; gap: 44px;
+}
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 2px; }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; border-radius: 2px; }
+img { max-width: 100%; }
+.mono { font-family: var(--font-mono); font-size: 0.82em; letter-spacing: 0.01em; }
+.muted { color: var(--muted); }
+
+/* Header */
+.intro { display: grid; grid-template-columns: 1fr 148px; gap: 32px; align-items: start; }
+.intro > div { min-width: 0; }
+h1 { font-size: 2rem; font-weight: 600; line-height: 1.15; margin: 0 0 4px; letter-spacing: -0.01em; text-wrap: balance; }
+h1 .ko { font-weight: 400; color: var(--muted); font-size: 0.6em; margin-left: 8px; letter-spacing: 0; }
+.role { margin: 0 0 16px; color: var(--muted); }
+.intro p { margin: 0 0 12px; max-width: 62ch; }
+.links { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 16px; font-family: var(--font-mono); font-size: 0.84rem; }
+.email { user-select: all; color: var(--fg); }
+.photo {
+  width: 148px; aspect-ratio: 1; max-width: 100%; border-radius: 50%;
+  background: var(--lv0); border: 1px solid var(--rule);
+  display: grid; place-items: center; color: var(--muted);
+  font-family: var(--font-mono); font-size: 0.78rem; overflow: hidden;
+}
+.photo img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Sections */
+section { display: flex; flex-direction: column; gap: 14px; }
+h2 {
+  font-size: 0.78rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--muted); margin: 0; padding-bottom: 8px; border-bottom: 1px solid var(--rule);
+  font-family: var(--font-mono);
+}
+ul.plain { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 4px; }
+ul.plain li::marker { color: var(--muted); }
+
+.entry { display: grid; grid-template-columns: 1fr auto; gap: 2px 20px; }
+.entry > * { min-width: 0; }
+.entry .what { font-weight: 600; }
+.entry .when { font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); text-align: right; white-space: nowrap; padding-top: 3px; font-variant-numeric: tabular-nums; }
+.entry .sub { grid-column: 1 / -1; color: var(--muted); }
+.entry .body { grid-column: 1 / -1; margin: 2px 0 0; }
+.stack { display: flex; flex-direction: column; gap: 18px; }
+
+/* Publication */
+.pub { display: flex; flex-direction: column; gap: 4px; }
+.pub .title { font-weight: 600; font-size: 1.02rem; line-height: 1.4; }
+.pub .authors b { font-weight: 600; text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 3px; }
+.pub .venue { font-style: italic; color: var(--muted); }
+.pub .tag { font-family: var(--font-mono); font-size: 0.72rem; border: 1px solid var(--rule); padding: 0 6px; border-radius: 3px; color: var(--muted); font-style: normal; margin-left: 6px; }
+.pub .plinks { font-family: var(--font-mono); font-size: 0.82rem; display: flex; gap: 14px; }
+.pub p { margin: 4px 0 0; }
+.pub .contrib { color: var(--muted); }
+
+/* Figure */
+figure.fig { margin: 0; display: flex; flex-direction: column; gap: 12px; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; font-size: 0.86rem; }
+.seg { display: inline-flex; border: 1px solid var(--cell-line); border-radius: 3px; overflow: hidden; }
+.seg button {
+  font: inherit; font-family: var(--font-mono); font-size: 0.78rem; padding: 4px 10px; cursor: pointer;
+  background: var(--bg); color: var(--fg); border: 0;
+}
+.seg button + button { border-left: 1px solid var(--cell-line); }
+.seg button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.slider { display: inline-flex; align-items: center; gap: 10px; font-family: var(--font-mono); font-size: 0.78rem; }
+.slider input { width: 140px; accent-color: var(--q); }
+.svgbox { overflow-x: auto; }
+.svgbox svg { display: block; width: 100%; min-width: 560px; height: auto; }
+.readout { display: flex; flex-wrap: wrap; gap: 6px 28px; font-family: var(--font-mono); font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+.readout b { font-weight: 500; color: var(--fg); }
+figcaption { font-size: 0.85rem; color: var(--muted); max-width: 68ch; }
+.math { font-family: var(--font-math); font-style: italic; }
+
+footer { font-family: var(--font-mono); font-size: 0.76rem; color: var(--muted); border-top: 1px solid var(--rule); padding-top: 14px; }
+
+@media (max-width: 560px) {
+  .wrap { padding-block: 36px 48px; gap: 36px; }
+  .intro { grid-template-columns: 1fr; gap: 20px; }
+  .photo { order: -1; width: 104px; }
+  h1 { font-size: 1.7rem; }
+  .entry { grid-template-columns: 1fr; }
+  .entry .when { text-align: left; padding-top: 0; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .cell { transition: fill .25s ease, opacity .25s ease; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="intro">
+    <div>
+      <h1>Dongho Seo <span class="ko">서동호</span></h1>
+      <p class="role">Undergraduate Researcher · SYMPLE Lab, GIST</p>
+      <p>I am a senior undergraduate in Electrical Engineering and Computer Science at <a href="https://www.gist.ac.kr" target="_blank" rel="noopener">GIST</a> and a research intern at SYMPLE Lab, advised by <a href="https://scholar.google.com/citations?user=ScgPYbQAAAAJ&amp;hl=ko&amp;oi=ao" target="_blank" rel="noopener">Prof. Sangjin Kim</a>.</p>
+      <p>My research focuses on KV cache optimization. As LLM context windows grow longer, the KV cache becomes a major memory and bandwidth bottleneck during inference, and I work on compressing it without losing long-context accuracy. Building on this, I am expanding my interests toward on-device LLM inference and NPU design.</p>
+      <p>I came to research from software engineering, building and operating web services used by students on campus. That work shaped how I approach systems problems: measure where the bottleneck is first, then change the structure.</p>
+      <div class="links">
+        <span class="email">ehcws333@gm.gist.ac.kr</span>
+        <a href="notes/">Notes</a>
+        <a href="https://github.com/sleeep23" target="_blank" rel="noopener">GitHub</a>
+        <!-- <a href="https://scholar.google.com/citations?user=XXXX" target="_blank" rel="noopener">Scholar</a> -->
+      </div>
+    </div>
+    <div class="photo" aria-label="Profile photo placeholder">
+      <!-- Replace with: <img src="profile.jpg" alt="Dongho Seo"> -->
+      photo
+    </div>
+  </header>
+
+  <section aria-labelledby="h-interests">
+    <h2 id="h-interests">Research Interests</h2>
+    <ul class="plain">
+      <li>KV cache optimization for long-context LLM inference</li>
+      <li>On-device LLM inference</li>
+      <li>NPU design for generative AI workloads</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="h-pubs">
+    <h2 id="h-pubs">Publications</h2>
+
+    <div class="pub">
+      <a class="title" href="https://arxiv.org/abs/2610.09827" target="_blank" rel="noopener">Dual-QK: Sharp Queries and Flat Keys for Prunable 2-bit KV Caches</a>
+      <div class="authors">Sunjoo Whang, Jungjun Oh, Minsung Kim, <b>Dongho Seo</b>, Jisu Shin, Gregory Kielian, Hoi-Jun Yoo, Sangjin Kim</div>
+      <div><span class="venue">arXiv preprint, 2026</span><span class="tag">preprint</span></div>
+      <div class="plinks">
+        <a href="https://arxiv.org/abs/2610.09827" target="_blank" rel="noopener">arXiv</a>
+        <a href="https://arxiv.org/pdf/2610.09827" target="_blank" rel="noopener">PDF</a>
+      </div>
+      <p>Pairs non-orthogonal query and key transforms so that INT2 key quantization and query-channel pruning work together. Reaches 6.8× KV cache compression at 128K context and up to 3.75× decoding throughput in SGLang.</p>
+    </div>
+
+    <figure class="fig" id="fig">
+      <div class="controls">
+        <div class="seg" role="group" aria-label="Transform">
+          <button type="button" id="btn-raw" aria-pressed="false">raw</button>
+          <button type="button" id="btn-dual" aria-pressed="true">Dual-QK</button>
+        </div>
+        <label class="slider" for="sp">query sparsity <input id="sp" type="range" min="0" max="75" step="5" value="40"> <span id="sp-val">40%</span></label>
+      </div>
+      <div class="svgbox"><svg id="svg" viewBox="0 0 640 300" role="img" aria-label="Schematic of a query vector and a 2-bit key cache with pruned channels"></svg></div>
+      <div class="readout" aria-live="polite">
+        <span>query energy kept <b id="r-energy">–</b></span>
+        <span>INT2 key error <b id="r-err">–</b></span>
+        <span>key bits read vs FP16 <b id="r-bits">–</b></span>
+      </div>
+      <figcaption>Toy schematic with synthetic numbers, not results from the paper. Pruned query channels (hatched) let the matching key channels be skipped in <span class="math">q·K</span><sup>⊤</sup>. A sharp query keeps most of its energy after pruning; flat keys lose less when squeezed into four INT2 levels. Red frames mark outlier key channels.</figcaption>
+    </figure>
+  </section>
+
+  <section aria-labelledby="h-exp">
+    <h2 id="h-exp">Research Experience</h2>
+    <div class="entry">
+      <span class="what">SYMPLE Lab, GIST</span>
+      <span class="when">Jul 2026 – Present</span>
+      <span class="sub">Undergraduate Research Intern · Advisor: Prof. Sangjin Kim</span>
+      <p class="body">Efficient LLM inference: KV cache quantization and pruning.</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-edu">
+    <h2 id="h-edu">Education</h2>
+    <div class="stack">
+      <div class="entry">
+        <span class="what">Gwangju Institute of Science and Technology (GIST)</span>
+        <span class="when">Mar 2020 – Aug 2027 (exp.)</span>
+        <span class="sub">B.S. in Electrical Engineering and Computer Science · Major GPA 3.9 / 4.5</span>
+      </div>
+      <div class="entry">
+        <span class="what">University of California, Berkeley</span>
+        <span class="when">Summer 2023</span>
+        <span class="sub">Berkeley Summer Sessions · GPA 4.00 / 4.00</span>
+        <span class="sub">COMPSCI 70: Discrete Mathematics and Probability Theory · ECON N110: Game Theory in the Social Sciences</span>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-proj">
+    <h2 id="h-proj">Projects</h2>
+    <div class="stack">
+      <div class="entry">
+        <span class="what">Gijol: Graduation Requirement Checker</span>
+        <span class="when">Apr 2022 – Present</span>
+        <span class="sub">Sole developer and maintainer</span>
+        <p class="body">Encodes GIST's curriculum rules, which change by admission year and major, into verifiable checks on uploaded transcripts. Used by about 51% of GIST undergraduates across four rebuilds.</p>
+      </div>
+      <div class="entry">
+        <span class="what">Mefeto: AI-assisted Legislative Information Platform</span>
+        <span class="when">Apr – Aug 2023</span>
+        <span class="sub">Frontend developer · Team of four</span>
+        <p class="body">Pipeline that scrapes National Assembly bills and restructures them with GPT, plus an embedding-based issue-cluster visualization.</p>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-honors">
+    <h2 id="h-honors">Honors &amp; Awards</h2>
+    <div class="stack">
+      <div class="entry">
+        <span class="what">Excellence Award, 9th Gwangju Public Data Startup Competition</span>
+        <span class="when">2023</span>
+      </div>
+      <div class="entry">
+        <span class="what">Special Prize, AIFactory ChatGPT Microsoft Azurethon</span>
+        <span class="when">2023</span>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-other">
+    <h2 id="h-other">Service</h2>
+    <div class="stack">
+      <div class="entry">
+        <span class="what">GIST Student Association, InfoTeam</span>
+        <span class="when">Mar 2026 – Present</span>
+        <span class="sub">Full-stack developer</span>
+      </div>
+      <div class="entry">
+        <span class="what">Republic of Korea Air Force</span>
+        <span class="when">Mar 2024 – Dec 2025</span>
+        <span class="sub">Information Technology Specialist · Mandatory military service</span>
+      </div>
+    </div>
+  </section>
+
+  <footer>Last updated October 2026</footer>
+</div>
+
+<script>
+(function () {
+  var D = 16, T = 7;
+  // deterministic PRNG
+  var s = 7;
+  function rnd() { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }
+  function gauss() { var u = rnd() || 1e-9, v = rnd(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+
+  // raw query: energy spread over channels
+  var qRaw = [], qDual = [], kRaw = [], kDual = [];
+  for (var i = 0; i < D; i++) qRaw.push(0.55 + 0.45 * rnd());
+  // dual query: few dominant channels
+  var heavy = [2, 5, 9, 12, 14];
+  for (i = 0; i < D; i++) qDual.push(heavy.indexOf(i) >= 0 ? 0.75 + 0.25 * rnd() : 0.06 + 0.12 * rnd());
+  // raw keys: two outlier channels; dual keys: flat
+  var outl = [3, 11];
+  for (var t = 0; t < T; t++) {
+    var r1 = [], r2 = [];
+    for (i = 0; i < D; i++) {
+      var g = gauss();
+      r1.push(outl.indexOf(i) >= 0 ? g * 0.6 + (rnd() > .5 ? 5 : -5) : g);
+      r2.push(Math.max(-1.8, Math.min(1.8, gauss())));
+    }
+    kRaw.push(r1); kDual.push(r2);
+  }
+
+  function quant(row) { // per-row INT2: 4 levels over [min,max]
+    var mn = Math.min.apply(null, row), mx = Math.max.apply(null, row), st = (mx - mn) / 3 || 1;
+    return row.map(function (v) { return Math.round((v - mn) / st); }).map(function (l, j) { return { l: l, dq: mn + l * st, v: row[j] }; });
+  }
+
+  var mode = "dual", sp = 40;
+  var svg = document.getElementById("svg"), NS = "http://www.w3.org/2000/svg";
+  function el(n, a, txt) { var e = document.createElementNS(NS, n); for (var k in a) e.setAttribute(k, a[k]); if (txt != null) e.textContent = txt; svg.appendChild(e); return e; }
+
+  function draw() {
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var q = mode === "dual" ? qDual : qRaw, K = mode === "dual" ? kDual : kRaw;
+    var nPrune = Math.round(D * sp / 100);
+    var order = q.map(function (v, j) { return [v, j]; }).sort(function (a, b) { return a[0] - b[0]; });
+    var pruned = {}; for (var p = 0; p < nPrune; p++) pruned[order[p][1]] = true;
+
+    var C = 26, X0 = 96, YQ = 46, YK = 118;
+    var defs = el("defs", {});
+    var pat = document.createElementNS(NS, "pattern");
+    pat.setAttribute("id", "hatch"); pat.setAttribute("width", "6"); pat.setAttribute("height", "6");
+    pat.setAttribute("patternUnits", "userSpaceOnUse"); pat.setAttribute("patternTransform", "rotate(45)");
+    var ln = document.createElementNS(NS, "line");
+    ln.setAttribute("x1", "0"); ln.setAttribute("y1", "0"); ln.setAttribute("x2", "0"); ln.setAttribute("y2", "6");
+    ln.setAttribute("stroke", "var(--muted)"); ln.setAttribute("stroke-width", "1.2");
+    pat.appendChild(ln); defs.appendChild(pat);
+
+    var mathStyle = "font-family:var(--font-math);font-style:italic;font-size:17px;fill:var(--fg)";
+    var monoStyle = "font-family:var(--font-mono);font-size:10.5px;fill:var(--muted)";
+
+    // query row
+    el("text", { x: X0 - 14, y: YQ + C * 0.68, "text-anchor": "end", style: mathStyle }, "q");
+    var qmax = Math.max.apply(null, q);
+    for (var j = 0; j < D; j++) {
+      var x = X0 + j * C;
+      if (pruned[j]) {
+        el("rect", { x: x, y: YQ, width: C, height: C, fill: "var(--pruned)", stroke: "var(--cell-line)", "stroke-width": 1, class: "cell" });
+        el("rect", { x: x, y: YQ, width: C, height: C, fill: "url(#hatch)", stroke: "none" });
+      } else {
+        el("rect", { x: x, y: YQ, width: C, height: C, fill: "var(--q)", "fill-opacity": (0.15 + 0.85 * q[j] / qmax).toFixed(2), stroke: "var(--cell-line)", "stroke-width": 1, class: "cell" });
+      }
+    }
+    el("text", { x: X0, y: YQ - 10, style: monoStyle }, "query channels  d = " + D + "  ·  " + nPrune + " pruned");
+
+    // key cache
+    el("text", { x: X0 - 14, y: YK + (T * C) / 2 + 6, "text-anchor": "end", style: mathStyle }, "K");
+    var lv = ["var(--lv0)", "var(--lv1)", "var(--lv2)", "var(--lv3)"];
+    var errNum = 0, errDen = 0;
+    for (var t = 0; t < T; t++) {
+      var qr = quant(K[t]);
+      for (j = 0; j < D; j++) {
+        x = X0 + j * C; var y = YK + t * C;
+        el("rect", { x: x, y: y, width: C, height: C, fill: lv[qr[j].l], stroke: "var(--cell-line)", "stroke-width": 1, opacity: pruned[j] ? 0.18 : 1, class: "cell" });
+        if (!pruned[j]) { errNum += Math.pow(qr[j].v - qr[j].dq, 2); errDen += qr[j].v * qr[j].v; }
+      }
+    }
+    // outlier frames
+    if (mode === "raw") outl.forEach(function (j) {
+      el("rect", { x: X0 + j * C - 1.5, y: YK - 1.5, width: C + 3, height: T * C + 3, fill: "none", stroke: "var(--hot)", "stroke-width": 2.5 });
+    });
+    el("text", { x: X0, y: YK - 10, style: monoStyle }, "key cache  ·  INT2 (4 levels per row)  ·  " + T + " tokens shown");
+
+    // legend
+    var LX = X0 + D * C + 18;
+    el("text", { x: LX, y: YK + 6, style: monoStyle }, "level");
+    for (var l = 0; l < 4; l++) {
+      el("rect", { x: LX, y: YK + 16 + l * 20, width: 14, height: 14, fill: lv[l], stroke: "var(--cell-line)", "stroke-width": 1 });
+      el("text", { x: LX + 20, y: YK + 27 + l * 20, style: monoStyle }, String(l));
+    }
+    if (mode === "raw") {
+      el("rect", { x: LX, y: YK + 106, width: 14, height: 14, fill: "none", stroke: "var(--hot)", "stroke-width": 2.5 });
+      el("text", { x: LX + 20, y: YK + 117, style: monoStyle }, "outlier");
+    }
+
+    // readout
+    var tot = 0, kept = 0;
+    q.forEach(function (v, j) { tot += v * v; if (!pruned[j]) kept += v * v; });
+    document.getElementById("r-energy").textContent = Math.round(100 * kept / tot) + "%";
+    document.getElementById("r-err").textContent = (errDen ? (100 * errNum / errDen) : 0).toFixed(1) + "%";
+    document.getElementById("r-bits").textContent = (100 * (2 / 16) * (1 - nPrune / D)).toFixed(1) + "%";
+  }
+
+  var bRaw = document.getElementById("btn-raw"), bDual = document.getElementById("btn-dual");
+  function setMode(m) { mode = m; bRaw.setAttribute("aria-pressed", m === "raw"); bDual.setAttribute("aria-pressed", m === "dual"); draw(); }
+  bRaw.addEventListener("click", function () { setMode("raw"); });
+  bDual.addEventListener("click", function () { setMode("dual"); });
+  var spEl = document.getElementById("sp"), spVal = document.getElementById("sp-val");
+  spEl.addEventListener("input", function () { sp = +spEl.value; spVal.textContent = sp + "%"; draw(); });
+  draw();
+})();
+</script>
+
+</body>
+</html>
