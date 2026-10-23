@@ -110,6 +110,8 @@ ul.plain li::marker { color: var(--muted); }
 .pub { display: flex; flex-direction: column; gap: 4px; }
 .pub .title { font-weight: 600; font-size: 1.02rem; line-height: 1.4; }
 .pub .authors b { font-weight: 600; text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 3px; }
+.pub sup { font-size: 0.68em; line-height: 0; color: var(--muted); margin-left: 1px; }
+.pub .affil { font-size: 0.84rem; color: var(--muted); }
 .pub .venue { font-style: italic; color: var(--muted); }
 .pub .tag { font-family: var(--font-mono); font-size: 0.72rem; border: 1px solid var(--rule); padding: 0 6px; border-radius: 3px; color: var(--muted); font-style: normal; margin-left: 6px; }
 .pub .plinks { font-family: var(--font-mono); font-size: 0.82rem; display: flex; gap: 14px; }
@@ -187,7 +189,8 @@ footer { font-family: var(--font-mono); font-size: 0.76rem; color: var(--muted);
 
     <div class="pub">
       <a class="title" href="https://arxiv.org/abs/2610.09827" target="_blank" rel="noopener">Dual-QK: Sharp Queries and Flat Keys for Prunable 2-bit KV Caches</a>
-      <div class="authors">Sunjoo Whang, Jungjun Oh, Minsung Kim, <b>Dongho Seo</b>, Jisu Shin, Gregory Kielian, Hoi-Jun Yoo, Sangjin Kim</div>
+      <div class="authors">Sunjoo Whang<sup>1</sup>, Jungjun Oh<sup>1</sup>, Minsung Kim<sup>1</sup>, <b>Dongho Seo</b><sup>2</sup>, Jisu Shin<sup>2</sup>, Gregory Kielian<sup>3</sup>, Hoi-Jun Yoo<sup>1</sup>, Sangjin Kim<sup>2,†</sup></div>
+      <div class="affil"><sup>1</sup>KAIST · <sup>2</sup>GIST · <sup>3</sup>Google Research · <sup>†</sup>Corresponding author</div>
       <div><span class="venue">arXiv preprint, 2026</span><span class="tag">preprint</span></div>
       <div class="plinks">
         <a href="https://arxiv.org/abs/2610.09827" target="_blank" rel="noopener">arXiv</a>
