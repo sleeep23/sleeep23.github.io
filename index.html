@@ -188,7 +188,7 @@ footer { font-family: var(--font-mono); font-size: 0.76rem; color: var(--muted);
     <h2 id="h-pubs">Publications</h2>
 
     <div class="pub">
-      <a class="title" href="https://arxiv.org/abs/2610.09827" target="_blank" rel="noopener">Dual-QK: Sharp Queries and Flat Keys for Prunable 2-bit KV Caches</a>
+      <a class="title" href="papers/dual-qk.html">Dual-QK: Sharp Queries and Flat Keys for Prunable 2-bit KV Caches</a>
       <div class="authors">Sunjoo Whang<sup>1</sup>, Jungjun Oh<sup>1</sup>, Minsung Kim<sup>1</sup>, <b>Dongho Seo</b><sup>2</sup>, Jisu Shin<sup>2</sup>, Gregory Kielian<sup>3</sup>, Hoi-Jun Yoo<sup>1</sup>, Sangjin Kim<sup>2,†</sup></div>
       <div class="affil"><sup>1</sup>KAIST · <sup>2</sup>GIST · <sup>3</sup>Google Research · <sup>†</sup>Corresponding author</div>
       <div><span class="venue">arXiv preprint, 2026</span><span class="tag">preprint</span></div>
@@ -196,25 +196,7 @@ footer { font-family: var(--font-mono); font-size: 0.76rem; color: var(--muted);
         <a href="https://arxiv.org/abs/2610.09827" target="_blank" rel="noopener">arXiv</a>
         <a href="https://arxiv.org/pdf/2610.09827" target="_blank" rel="noopener">PDF</a>
       </div>
-      <p>Pairs non-orthogonal query and key transforms so that INT2 key quantization and query-channel pruning work together. Reaches 6.8× KV cache compression at 128K context and up to 3.75× decoding throughput in SGLang.</p>
     </div>
-
-    <figure class="fig" id="fig">
-      <div class="controls">
-        <div class="seg" role="group" aria-label="Transform">
-          <button type="button" id="btn-raw" aria-pressed="false">raw</button>
-          <button type="button" id="btn-dual" aria-pressed="true">Dual-QK</button>
-        </div>
-        <label class="slider" for="sp">query sparsity <input id="sp" type="range" min="0" max="75" step="5" value="40"> <span id="sp-val">40%</span></label>
-      </div>
-      <div class="svgbox"><svg id="svg" viewBox="0 0 640 300" role="img" aria-label="Schematic of a query vector and a 2-bit key cache with pruned channels"></svg></div>
-      <div class="readout" aria-live="polite">
-        <span>query energy kept <b id="r-energy">–</b></span>
-        <span>INT2 key error <b id="r-err">–</b></span>
-        <span>key bits read vs FP16 <b id="r-bits">–</b></span>
-      </div>
-      <figcaption>Toy schematic with synthetic numbers, not results from the paper. Pruned query channels (hatched) let the matching key channels be skipped in <span class="math">q·K</span><sup>⊤</sup>. A sharp query keeps most of its energy after pruning; flat keys lose less when squeezed into four INT2 levels. Red frames mark outlier key channels.</figcaption>
-    </figure>
   </section>
 
   <section aria-labelledby="h-exp">
@@ -295,148 +277,6 @@ footer { font-family: var(--font-mono); font-size: 0.76rem; color: var(--muted);
   <footer>Last updated October 2026</footer>
 </div>
 
-<script>
-(function () {
-  var D = 16, T = 7;
-  // deterministic PRNG
-  var s = 7;
-  function rnd() { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }
-  function gauss() { var u = rnd() || 1e-9, v = rnd(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
-
-  // raw query: energy spread over channels
-  var qRaw = [], qDual = [], kRaw = [], kDual = [];
-  for (var i = 0; i < D; i++) qRaw.push(0.55 + 0.45 * rnd());
-  // dual query: few dominant channels
-  var heavy = [2, 5, 9, 12, 14];
-  for (i = 0; i < D; i++) qDual.push(heavy.indexOf(i) >= 0 ? 0.75 + 0.25 * rnd() : 0.06 + 0.12 * rnd());
-  // raw keys: two outlier channels; dual keys: flat
-  var outl = [3, 11];
-  for (var t = 0; t < T; t++) {
-    var r1 = [], r2 = [];
-    for (i = 0; i < D; i++) {
-      var g = gauss();
-      r1.push(outl.indexOf(i) >= 0 ? g * 0.6 + (rnd() > .5 ? 5 : -5) : g);
-      r2.push(Math.max(-1.8, Math.min(1.8, gauss())));
-    }
-    kRaw.push(r1); kDual.push(r2);
-  }
-
-  function quant(row) { // per-row INT2: 4 levels over [min,max]
-    var mn = Math.min.apply(null, row), mx = Math.max.apply(null, row), st = (mx - mn) / 3 || 1;
-    return row.map(function (v) { return Math.round((v - mn) / st); }).map(function (l, j) { return { l: l, dq: mn + l * st, v: row[j] }; });
-  }
-
-  var mode = "dual", sp = 40;
-  var svg = document.getElementById("svg"), NS = "http://www.w3.org/2000/svg";
-  function el(n, a, txt) { var e = document.createElementNS(NS, n); for (var k in a) e.setAttribute(k, a[k]); if (txt != null) e.textContent = txt; svg.appendChild(e); return e; }
-
-  function draw() {
-    while (svg.firstChild) svg.removeChild(svg.firstChild);
-    var q = mode === "dual" ? qDual : qRaw, K = mode === "dual" ? kDual : kRaw;
-    var nPrune = Math.round(D * sp / 100);
-    var order = q.map(function (v, j) { return [v, j]; }).sort(function (a, b) { return a[0] - b[0]; });
-    var pruned = {}; for (var p = 0; p < nPrune; p++) pruned[order[p][1]] = true;
-
-    var compact = (svg.parentNode.clientWidth || 640) < 560;
-    var C = compact ? 24 : 26, X0 = compact ? 30 : 96, YQ = compact ? 52 : 46, YK = compact ? 132 : 118;
-    var W = compact ? 420 : 640, H = compact ? YK + T * C + 50 : 300;
-    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
-    var defs = el("defs", {});
-    var pat = document.createElementNS(NS, "pattern");
-    pat.setAttribute("id", "hatch"); pat.setAttribute("width", "6"); pat.setAttribute("height", "6");
-    pat.setAttribute("patternUnits", "userSpaceOnUse"); pat.setAttribute("patternTransform", "rotate(45)");
-    var ln = document.createElementNS(NS, "line");
-    ln.setAttribute("x1", "0"); ln.setAttribute("y1", "0"); ln.setAttribute("x2", "0"); ln.setAttribute("y2", "6");
-    ln.setAttribute("stroke", "var(--muted)"); ln.setAttribute("stroke-width", "1.2");
-    pat.appendChild(ln); defs.appendChild(pat);
-
-    var mathStyle = "font-family:var(--font-math);font-style:italic;font-size:" + (compact ? 20 : 17) + "px;fill:var(--fg)";
-    var monoStyle = "font-family:var(--font-mono);font-size:" + (compact ? 13 : 10.5) + "px;fill:var(--muted)";
-
-    // query row
-    el("text", { x: X0 - 14, y: YQ + C * 0.68, "text-anchor": "end", style: mathStyle }, "q");
-    var qmax = Math.max.apply(null, q);
-    for (var j = 0; j < D; j++) {
-      var x = X0 + j * C;
-      if (pruned[j]) {
-        el("rect", { x: x, y: YQ, width: C, height: C, fill: "var(--pruned)", stroke: "var(--cell-line)", "stroke-width": 1, class: "cell" });
-        el("rect", { x: x, y: YQ, width: C, height: C, fill: "url(#hatch)", stroke: "none" });
-      } else {
-        el("rect", { x: x, y: YQ, width: C, height: C, fill: "var(--q)", "fill-opacity": (0.15 + 0.85 * q[j] / qmax).toFixed(2), stroke: "var(--cell-line)", "stroke-width": 1, class: "cell" });
-      }
-    }
-    el("text", { x: X0, y: YQ - 12, style: monoStyle }, compact ? "query · d = " + D + " · " + nPrune + " pruned" : "query channels  d = " + D + "  ·  " + nPrune + " pruned");
-
-    // key cache
-    el("text", { x: X0 - 14, y: YK + (T * C) / 2 + 6, "text-anchor": "end", style: mathStyle }, "K");
-    var lv = ["var(--lv0)", "var(--lv1)", "var(--lv2)", "var(--lv3)"];
-    var errNum = 0, errDen = 0;
-    for (var t = 0; t < T; t++) {
-      var qr = quant(K[t]);
-      for (j = 0; j < D; j++) {
-        x = X0 + j * C; var y = YK + t * C;
-        el("rect", { x: x, y: y, width: C, height: C, fill: lv[qr[j].l], stroke: "var(--cell-line)", "stroke-width": 1, opacity: pruned[j] ? 0.18 : 1, class: "cell" });
-        if (!pruned[j]) { errNum += Math.pow(qr[j].v - qr[j].dq, 2); errDen += qr[j].v * qr[j].v; }
-      }
-    }
-    // outlier frames
-    if (mode === "raw") outl.forEach(function (j) {
-      el("rect", { x: X0 + j * C - 1.5, y: YK - 1.5, width: C + 3, height: T * C + 3, fill: "none", stroke: "var(--hot)", "stroke-width": 2.5 });
-    });
-    el("text", { x: X0, y: YK - 12, style: monoStyle }, compact ? "key cache · INT2, 4 levels/row" : "key cache  ·  INT2 (4 levels per row)  ·  " + T + " tokens shown");
-
-    // legend: column at right (wide) or row below (compact)
-    var l;
-    if (compact) {
-      var LY = YK + T * C + 22;
-      el("text", { x: X0, y: LY + 12, style: monoStyle }, "level");
-      for (l = 0; l < 4; l++) {
-        el("rect", { x: X0 + 52 + l * 42, y: LY, width: 16, height: 16, fill: lv[l], stroke: "var(--cell-line)", "stroke-width": 1 });
-        el("text", { x: X0 + 74 + l * 42, y: LY + 13, style: monoStyle }, String(l));
-      }
-      if (mode === "raw") {
-        el("rect", { x: X0 + 236, y: LY, width: 16, height: 16, fill: "none", stroke: "var(--hot)", "stroke-width": 2.5 });
-        el("text", { x: X0 + 258, y: LY + 13, style: monoStyle }, "outlier");
-      }
-    } else {
-      var LX = X0 + D * C + 18;
-      el("text", { x: LX, y: YK + 6, style: monoStyle }, "level");
-      for (l = 0; l < 4; l++) {
-        el("rect", { x: LX, y: YK + 16 + l * 20, width: 14, height: 14, fill: lv[l], stroke: "var(--cell-line)", "stroke-width": 1 });
-        el("text", { x: LX + 20, y: YK + 27 + l * 20, style: monoStyle }, String(l));
-      }
-      if (mode === "raw") {
-        el("rect", { x: LX, y: YK + 106, width: 14, height: 14, fill: "none", stroke: "var(--hot)", "stroke-width": 2.5 });
-        el("text", { x: LX + 20, y: YK + 117, style: monoStyle }, "outlier");
-      }
-    }
-
-    // readout
-    var tot = 0, kept = 0;
-    q.forEach(function (v, j) { tot += v * v; if (!pruned[j]) kept += v * v; });
-    document.getElementById("r-energy").textContent = Math.round(100 * kept / tot) + "%";
-    document.getElementById("r-err").textContent = (errDen ? (100 * errNum / errDen) : 0).toFixed(1) + "%";
-    document.getElementById("r-bits").textContent = (100 * (2 / 16) * (1 - nPrune / D)).toFixed(1) + "%";
-  }
-
-  var bRaw = document.getElementById("btn-raw"), bDual = document.getElementById("btn-dual");
-  function setMode(m) { mode = m; bRaw.setAttribute("aria-pressed", m === "raw"); bDual.setAttribute("aria-pressed", m === "dual"); draw(); }
-  bRaw.addEventListener("click", function () { setMode("raw"); });
-  bDual.addEventListener("click", function () { setMode("dual"); });
-  var spEl = document.getElementById("sp"), spVal = document.getElementById("sp-val");
-  spEl.addEventListener("input", function () { sp = +spEl.value; spVal.textContent = sp + "%"; draw(); });
-  var lastCompact = null, rt;
-  window.addEventListener("resize", function () {
-    clearTimeout(rt);
-    rt = setTimeout(function () {
-      var c = (svg.parentNode.clientWidth || 640) < 560;
-      if (c !== lastCompact) { lastCompact = c; draw(); }
-    }, 120);
-  });
-  lastCompact = (svg.parentNode.clientWidth || 640) < 560;
-  draw();
-})();
-</script>
 
 </body>
 </html>
