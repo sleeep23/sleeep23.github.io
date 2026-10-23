@@ -58,7 +58,7 @@ body {
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-block: 56px 64px;
-  display: flex; flex-direction: column; gap: 44px;
+  display: flex; flex-direction: column; gap: 56px;
 }
 a { color: var(--link); text-decoration: none; }
 a:hover { text-decoration: underline; text-underline-offset: 2px; }
@@ -85,11 +85,15 @@ h1 .ko { font-weight: 400; color: var(--muted); font-size: 0.6em; margin-left: 8
 .photo img { width: 100%; height: 100%; object-fit: cover; }
 
 /* Sections */
-section { display: flex; flex-direction: column; gap: 14px; }
+section { display: flex; flex-direction: column; gap: 16px; }
 h2 {
-  font-size: 0.78rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.12em;
-  color: var(--muted); margin: 0; padding-bottom: 8px; border-bottom: 1px solid var(--rule);
-  font-family: var(--font-mono);
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--font-sans); font-size: 1.12rem; font-weight: 600; letter-spacing: -0.005em;
+  color: var(--fg); margin: 0; padding-top: 14px; border-top: 1.5px solid var(--fg);
+}
+h2::before {
+  content: ""; width: 10px; height: 10px; flex: none;
+  background: var(--fg); border: 1.5px solid var(--fg);
 }
 ul.plain { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 4px; }
 ul.plain li::marker { color: var(--muted); }
@@ -125,7 +129,7 @@ figure.fig { margin: 0; display: flex; flex-direction: column; gap: 12px; }
 .slider { display: inline-flex; align-items: center; gap: 10px; font-family: var(--font-mono); font-size: 0.78rem; }
 .slider input { width: 140px; accent-color: var(--q); }
 .svgbox { overflow-x: auto; }
-.svgbox svg { display: block; width: 100%; min-width: 560px; height: auto; }
+.svgbox svg { display: block; width: 100%; height: auto; }
 .readout { display: flex; flex-wrap: wrap; gap: 6px 28px; font-family: var(--font-mono); font-size: 0.8rem; font-variant-numeric: tabular-nums; }
 .readout b { font-weight: 500; color: var(--fg); }
 figcaption { font-size: 0.85rem; color: var(--muted); max-width: 68ch; }
@@ -134,7 +138,7 @@ figcaption { font-size: 0.85rem; color: var(--muted); max-width: 68ch; }
 footer { font-family: var(--font-mono); font-size: 0.76rem; color: var(--muted); border-top: 1px solid var(--rule); padding-top: 14px; }
 
 @media (max-width: 560px) {
-  .wrap { padding-block: 36px 48px; gap: 36px; }
+  .wrap { padding-block: 36px 48px; gap: 44px; }
   .intro { grid-template-columns: 1fr; gap: 20px; }
   .photo { order: -1; width: 120px; justify-self: center; }
   h1 { font-size: 1.7rem; }
@@ -330,7 +334,10 @@ footer { font-family: var(--font-mono); font-size: 0.76rem; color: var(--muted);
     var order = q.map(function (v, j) { return [v, j]; }).sort(function (a, b) { return a[0] - b[0]; });
     var pruned = {}; for (var p = 0; p < nPrune; p++) pruned[order[p][1]] = true;
 
-    var C = 26, X0 = 96, YQ = 46, YK = 118;
+    var compact = (svg.parentNode.clientWidth || 640) < 560;
+    var C = compact ? 24 : 26, X0 = compact ? 30 : 96, YQ = compact ? 52 : 46, YK = compact ? 132 : 118;
+    var W = compact ? 420 : 640, H = compact ? YK + T * C + 50 : 300;
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
     var defs = el("defs", {});
     var pat = document.createElementNS(NS, "pattern");
     pat.setAttribute("id", "hatch"); pat.setAttribute("width", "6"); pat.setAttribute("height", "6");
@@ -340,8 +347,8 @@ footer { font-family: var(--font-mono); font-size: 0.76rem; color: var(--muted);
     ln.setAttribute("stroke", "var(--muted)"); ln.setAttribute("stroke-width", "1.2");
     pat.appendChild(ln); defs.appendChild(pat);
 
-    var mathStyle = "font-family:var(--font-math);font-style:italic;font-size:17px;fill:var(--fg)";
-    var monoStyle = "font-family:var(--font-mono);font-size:10.5px;fill:var(--muted)";
+    var mathStyle = "font-family:var(--font-math);font-style:italic;font-size:" + (compact ? 20 : 17) + "px;fill:var(--fg)";
+    var monoStyle = "font-family:var(--font-mono);font-size:" + (compact ? 13 : 10.5) + "px;fill:var(--muted)";
 
     // query row
     el("text", { x: X0 - 14, y: YQ + C * 0.68, "text-anchor": "end", style: mathStyle }, "q");
@@ -355,7 +362,7 @@ footer { font-family: var(--font-mono); font-size: 0.76rem; color: var(--muted);
         el("rect", { x: x, y: YQ, width: C, height: C, fill: "var(--q)", "fill-opacity": (0.15 + 0.85 * q[j] / qmax).toFixed(2), stroke: "var(--cell-line)", "stroke-width": 1, class: "cell" });
       }
     }
-    el("text", { x: X0, y: YQ - 10, style: monoStyle }, "query channels  d = " + D + "  ·  " + nPrune + " pruned");
+    el("text", { x: X0, y: YQ - 12, style: monoStyle }, compact ? "query · d = " + D + " · " + nPrune + " pruned" : "query channels  d = " + D + "  ·  " + nPrune + " pruned");
 
     // key cache
     el("text", { x: X0 - 14, y: YK + (T * C) / 2 + 6, "text-anchor": "end", style: mathStyle }, "K");
@@ -373,18 +380,32 @@ footer { font-family: var(--font-mono); font-size: 0.76rem; color: var(--muted);
     if (mode === "raw") outl.forEach(function (j) {
       el("rect", { x: X0 + j * C - 1.5, y: YK - 1.5, width: C + 3, height: T * C + 3, fill: "none", stroke: "var(--hot)", "stroke-width": 2.5 });
     });
-    el("text", { x: X0, y: YK - 10, style: monoStyle }, "key cache  ·  INT2 (4 levels per row)  ·  " + T + " tokens shown");
+    el("text", { x: X0, y: YK - 12, style: monoStyle }, compact ? "key cache · INT2, 4 levels/row" : "key cache  ·  INT2 (4 levels per row)  ·  " + T + " tokens shown");
 
-    // legend
-    var LX = X0 + D * C + 18;
-    el("text", { x: LX, y: YK + 6, style: monoStyle }, "level");
-    for (var l = 0; l < 4; l++) {
-      el("rect", { x: LX, y: YK + 16 + l * 20, width: 14, height: 14, fill: lv[l], stroke: "var(--cell-line)", "stroke-width": 1 });
-      el("text", { x: LX + 20, y: YK + 27 + l * 20, style: monoStyle }, String(l));
-    }
-    if (mode === "raw") {
-      el("rect", { x: LX, y: YK + 106, width: 14, height: 14, fill: "none", stroke: "var(--hot)", "stroke-width": 2.5 });
-      el("text", { x: LX + 20, y: YK + 117, style: monoStyle }, "outlier");
+    // legend: column at right (wide) or row below (compact)
+    var l;
+    if (compact) {
+      var LY = YK + T * C + 22;
+      el("text", { x: X0, y: LY + 12, style: monoStyle }, "level");
+      for (l = 0; l < 4; l++) {
+        el("rect", { x: X0 + 52 + l * 42, y: LY, width: 16, height: 16, fill: lv[l], stroke: "var(--cell-line)", "stroke-width": 1 });
+        el("text", { x: X0 + 74 + l * 42, y: LY + 13, style: monoStyle }, String(l));
+      }
+      if (mode === "raw") {
+        el("rect", { x: X0 + 236, y: LY, width: 16, height: 16, fill: "none", stroke: "var(--hot)", "stroke-width": 2.5 });
+        el("text", { x: X0 + 258, y: LY + 13, style: monoStyle }, "outlier");
+      }
+    } else {
+      var LX = X0 + D * C + 18;
+      el("text", { x: LX, y: YK + 6, style: monoStyle }, "level");
+      for (l = 0; l < 4; l++) {
+        el("rect", { x: LX, y: YK + 16 + l * 20, width: 14, height: 14, fill: lv[l], stroke: "var(--cell-line)", "stroke-width": 1 });
+        el("text", { x: LX + 20, y: YK + 27 + l * 20, style: monoStyle }, String(l));
+      }
+      if (mode === "raw") {
+        el("rect", { x: LX, y: YK + 106, width: 14, height: 14, fill: "none", stroke: "var(--hot)", "stroke-width": 2.5 });
+        el("text", { x: LX + 20, y: YK + 117, style: monoStyle }, "outlier");
+      }
     }
 
     // readout
@@ -401,6 +422,15 @@ footer { font-family: var(--font-mono); font-size: 0.76rem; color: var(--muted);
   bDual.addEventListener("click", function () { setMode("dual"); });
   var spEl = document.getElementById("sp"), spVal = document.getElementById("sp-val");
   spEl.addEventListener("input", function () { sp = +spEl.value; spVal.textContent = sp + "%"; draw(); });
+  var lastCompact = null, rt;
+  window.addEventListener("resize", function () {
+    clearTimeout(rt);
+    rt = setTimeout(function () {
+      var c = (svg.parentNode.clientWidth || 640) < 560;
+      if (c !== lastCompact) { lastCompact = c; draw(); }
+    }, 120);
+  });
+  lastCompact = (svg.parentNode.clientWidth || 640) < 560;
   draw();
 })();
 </script>
